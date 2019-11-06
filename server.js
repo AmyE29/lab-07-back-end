@@ -46,6 +46,7 @@ function weatherHandler(request, response) {
   superagent.get(url)
     .then ( weatherData => {
       const weatherSummaries = [];
+      console.log(weatherSummaries);
       weatherData.body.daily.data.forEach( (day) => {
         weatherSummaries.push( new Weather (day) );
       });
@@ -102,6 +103,6 @@ app.listen(PORT, () =>{
 });
 
 
-// https://www.eventbriteapi.com/v3/users/me/?token=DGGLPOOASOXR2GJGX5PY
+// https://www.eventbriteapi.com/v3/users/me/?token=EVENT_API_KEY
 
 // https://api.yelp.com/v3/autocomplete?text=del&latitude=37.786882&longitude=-122.399972
