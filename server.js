@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
+app.get('/trail', trailsHandler);
 app.use('*', notFoundHandler);
 app.use(errorHandler);
 
@@ -41,6 +42,7 @@ function Location(city, geoData) {
 
 function weatherHandler(request, response) {
   const url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${request.query.data.latitude},${request.query.data.longitude}`;
+  console.log(url);
   superagent.get(url)
     .then ( weatherData => {
       const weatherSummaries = [];
@@ -56,6 +58,35 @@ function Weather(day){
   this.time = new Date( day.time * 1000).toString().slice(0,15);
 }
 
+function trailsHandler(request, response) {
+  const url =`https://www.hikingproject.com/data/get-trails/${request.query.data.latitude}, ${request.query,data.longitude}&maxDistance=10&key=${process.env.TRAIL_API_KEY}`
+  console.log(url);
+  superagent.get(url)
+  .then(data => {
+    console.log(request.query.data);
+    console.log(data.body);
+    let trailData = new Trail (request.query.data, data.body);
+    console.log(trailData);
+    response.status(200).json(trailData);
+  })
+  .catch(error => errorHandler(error, request, response));
+}
+
+function Trail (city, location) {
+this.search_query = city;
+this.formatted_query = location.trail[0].name;
+this.location = location.trail[0].location;
+this.length = location.trail[0].length;
+this.stars = location.trail[0].stars;
+this.star_votes = location.trail[0].star_votes;
+this.summary = location.trail[0].summary;
+this.trail_url = location.trail[0].trail_url;
+this.conditions = location.trail[0].conditions;
+this.condition_date = location.trail[0].condition_date;
+this.condition_time = location.trail[0].condition_time;
+}
+
+
 
 function notFoundHandler(request, response) {
   response.status(404).send('not found');
@@ -69,3 +100,8 @@ function errorHandler(error, request, response) {
 app.listen(PORT, () =>{
   console.log(`listening to PORT ${PORT}`);
 });
+
+
+// https://www.eventbriteapi.com/v3/users/me/?token=DGGLPOOASOXR2GJGX5PY
+
+// https://api.yelp.com/v3/autocomplete?text=del&latitude=37.786882&longitude=-122.399972
