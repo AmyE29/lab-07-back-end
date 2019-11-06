@@ -2,6 +2,7 @@
 // npm packages
 require('dotenv').config();
 const express = require('express');
+const superagent = require('superagent');
 const cors = require('cors');
 
 //application constant
@@ -16,16 +17,19 @@ app.use(errorHandler);
 
 
 function locationHandler (request, response) {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&=${process.env.LOCATION-API-KEY}`;
-  const superagent = require('superagent');
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.LOCATION_API_KEY}`;
+  console.log(url);
   // const geoData = require('./data/geo.json');
   superagent.get(url)
     .then(data => {
+      console.log(request.query.data);
+      console.log(data.body);
       let locationData = new Location(request.query.data, data.body);
-      response.status(200).json(locationData)
-        .catch(error => errorHandler(error, request, response));
-    });
-}
+      console.log(locationData);
+      response.status(200).json(locationData);
+    })
+    .catch(error => errorHandler(error, request, response));
+ }
 
 function Location(city, geoData) {
   this.search_query = city;
@@ -35,17 +39,18 @@ function Location(city, geoData) {
 
 }
 
-
 function weatherHandler(request, response) {
-  const url = `https://api.darksky.net/forecast/${process.env.WEATHER-API-KEY}/${request.query.data.latitude},${request.query.data.longitude}`;
-  const weatherData = require('./data/darksky.json');
-  const weatherSummaries = [];
-  weatherData.daily.data.forEach( (day) => {
-    weatherSummaries.push( new Weather(day) );
-  });
-  response.status(200).json(weatherSummaries);
-}
-
+  const url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${request.query.data.latitude},${request.query.data.longitude}`;
+  superagent.get(url)
+    .then ( weatherData => {
+      const weatherSummaries = [];
+      weatherData.body.daily.data.forEach( (day) => {
+        weatherSummaries.push( new Weather (day) );
+      });
+      response.status(200).json(weatherSummaries);
+    })
+    .catch( error => errorHandler(error, request, response) );
+ }
 function Weather(day){
   this.forcast = day.summary;
   this.time = new Date( day.time * 1000).toString().slice(0,15);
