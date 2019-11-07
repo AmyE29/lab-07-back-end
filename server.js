@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 app.get('/location', locationHandler);
 app.get('/weather', weatherHandler);
-app.get('/trail', trailsHandler);
+app.get('/trails', trailsHandler);
 app.use('*', notFoundHandler);
 app.use(errorHandler);
 
@@ -52,10 +52,10 @@ function weatherHandler(request, response) {
       });
       response.status(200).json(weatherSummaries);
     })
-    .catch( error => errorHandler(error, request, response) );
+    .catch( error => errorHandler(error, request, response) ); 
  }
 function Weather(day){
-  this.forcast = day.summary;
+  this.forecast = day.summary;
   this.time = new Date( day.time * 1000).toString().slice(0,15);
 }
 
@@ -87,7 +87,29 @@ this.condition_date = location.trail[0].condition_date;
 this.condition_time = location.trail[0].condition_time;
 }
 
-
+function trailsHandler(request, response) {
+  const url = `https://www.hikingproject.com/data/get-trails?lat=${request.query.data.latitude}&lon=${request.query.data.longitude}&maxDistance=10&key=${process.env.TRAIL_API_KEY}`;
+  superagent.get(url)
+    .then(data => {
+      const trailData = data.body.trails.map(location => {
+        return new Trail(location);
+      });
+      response.status(200).json(trailData);
+    })
+    .catch(error => errorHandler(error, request, response));
+  }
+  function Trail (location) {
+  this.name = location.name;
+  this.location = location.location;
+  this.length = location.length;
+  this.stars = location.stars;
+  this.star_votes = location.starVotes;
+  this.summary = location.summary;
+  this.trail_url = location.url;
+  this.conditions = location.conditionStatus;
+  this.condition_date = location.conditionDate;
+  this.condition_time = location.conditionTime;
+  }
 
 function notFoundHandler(request, response) {
   response.status(404).send('not found');
